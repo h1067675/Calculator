@@ -15,6 +15,9 @@ var arabicNumbers = map[int]string{1: "I", 5: "V", 10: "X", 50: "L", 100: "C", 5
 
 func checkIsNumber(in string) bool {
 	r := []rune(in)
+	if in == "" {
+		return false
+	}
 	for _, e := range r {
 		if !unicode.IsNumber(e) {
 			return false
@@ -30,7 +33,11 @@ func checkIsNumber(in string) bool {
 		return true
 	}
 }
+
 func checkIsRoman(in string) bool {
+	if in == "" {
+		return false
+	}
 	for _, e := range arabicNumbers {
 		in = strings.ReplaceAll(in, e, "")
 	}
@@ -50,7 +57,7 @@ func romanToArabic(in string) (int, error) {
 	for i := 0; i < len(r); i++ {
 		if ex == string(r[i]) {
 			err = fmt.Errorf("Ошибка в арабском числе.")
-			return c, err
+			return 0, err
 		}
 		if i+1 < len(r) && romanNumbers[string(r[i])] < romanNumbers[string(r[i+1])] {
 			c += romanNumbers[string(r[i+1])] - romanNumbers[string(r[i])]
@@ -59,7 +66,7 @@ func romanToArabic(in string) (int, error) {
 		} else {
 			if ex != "" && prev == string(r[i]) {
 				err = fmt.Errorf("Ошибка в арабском числе.")
-				return c, err
+				return 0, err
 			} else {
 				ex = ""
 			}
@@ -70,7 +77,7 @@ func romanToArabic(in string) (int, error) {
 				count++
 				if count > 3 {
 					err = fmt.Errorf("Ошибка в арабском числе.")
-					return c, err
+					return 0, err
 				}
 			}
 			c += romanNumbers[string(r[i])]
@@ -105,18 +112,20 @@ func arabicToRoman(in int) string {
 	return out
 }
 
-func calculate(a int, b int, o string) int {
+func calculate(a int, b int, o string) (int, error) {
+	var err error
 	switch o {
 	case "+":
-		return a + b
+		return a + b, nil
 	case "-":
-		return a - b
+		return a - b, nil
 	case "/":
-		return a / b
+		return a / b, nil
 	case "*":
-		return a * b
+		return a * b, nil
 	default:
-		return 0
+		err = fmt.Errorf("Не верный операнд")
+		return 0, err
 	}
 }
 
@@ -173,7 +182,7 @@ func main() {
 					fmt.Fprintf(writer, "%s \n", "Значения выходят за предел 1 - 10.")
 					break
 				}
-				res := calculate(a, b, e)
+				res, _ := calculate(a, b, e)
 				if !isArabic {
 					if res < 0 {
 						fmt.Fprintf(writer, "%s \n", "В римской системе исчисления нет отрицательных значений.")
