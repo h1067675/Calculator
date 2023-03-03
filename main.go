@@ -13,7 +13,7 @@ import (
 var romanNumbers = map[string]int{"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
 var arabicNumbers = map[int]string{1: "I", 5: "V", 10: "X", 50: "L", 100: "C", 500: "D", 1000: "M"}
 
-func checkIsNumber(in string) bool {
+func CheckIsNumber(in string) bool {
 	r := []rune(in)
 	if in == "" {
 		return false
@@ -34,7 +34,7 @@ func checkIsNumber(in string) bool {
 	}
 }
 
-func checkIsRoman(in string) bool {
+func CheckIsRoman(in string) bool {
 	if in == "" {
 		return false
 	}
@@ -48,7 +48,7 @@ func checkIsRoman(in string) bool {
 	}
 }
 
-func romanToArabic(in string) (int, error) {
+func RomanToArabic(in string) (int, error) {
 	r := []rune(in)
 	c := 0
 	ex, prev := "", ""
@@ -86,7 +86,7 @@ func romanToArabic(in string) (int, error) {
 	return c, nil
 }
 
-func arabicToRoman(in int) string {
+func ArabicToRoman(in int) string {
 	r := []rune(strconv.Itoa(in))
 	out := ""
 	for i, e := range r {
@@ -112,7 +112,7 @@ func arabicToRoman(in int) string {
 	return out
 }
 
-func calculate(a int, b int, o string) (int, error) {
+func Calculate(a int, b int, o string) (int, error) {
 	var err error
 	switch o {
 	case "+":
@@ -124,79 +124,81 @@ func calculate(a int, b int, o string) (int, error) {
 	case "*":
 		return a * b, nil
 	default:
-		err = fmt.Errorf("Не верный операнд")
+		err = fmt.Errorf("Неверный операнд")
 		return 0, err
 	}
+}
+
+func Calculator(line string) (string, error) {
+	line = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(line, " ", ""), "\r", ""), "\n", "")
+	separator := []string{"+", "-", "/", "*"}
+	isArabic := true
+	var a, b int
+	var err error
+	for _, e := range separator {
+		splitted := strings.Split(line, e)
+		if len(splitted) == 2 {
+			if CheckIsRoman(splitted[0]) && CheckIsRoman(splitted[1]) {
+				isArabic = false
+				a, err = RomanToArabic(splitted[0])
+				if err != nil {
+					return "", err
+				}
+				b, err = RomanToArabic(splitted[1])
+				if err != nil {
+					return "", err
+				}
+			} else if CheckIsNumber(splitted[0]) && CheckIsNumber(splitted[1]) {
+				isArabic = true
+				a, err = strconv.Atoi(splitted[0])
+				if err != nil {
+					return "", err
+				}
+				b, err = strconv.Atoi(splitted[1])
+				if err != nil {
+					return "", err
+				}
+			} else {
+				err = fmt.Errorf("Неверный формат операндов.")
+				return "", err
+			}
+			if a < 1 || a > 10 || b < 1 || b > 10 {
+				err = fmt.Errorf("Значения выходят за предел 1 - 10.")
+				return "", err
+			}
+			res, _ := Calculate(a, b, e)
+			if !isArabic {
+				if res < 0 {
+					err = fmt.Errorf("Результат вычисления принял отрицательное значение. В римской системе исчисления нет отрицательных значений.")
+					return "", err
+				}
+				return ArabicToRoman(res), err
+			} else {
+				return strconv.Itoa(res), err
+			}
+		}
+
+	}
+	err = fmt.Errorf("формат вводных данных не соответствует требованиям.")
+	return "", err
 }
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	writer := bufio.NewWriter(os.Stdout)
-	var a, b int
-	var err error
-	separator := []string{"+", "-", "/", "*"}
 	fmt.Fprintf(writer, "%s ", "Добро пожаловать в калькулятор!\n Калькулятор умеет складывать, вычитать, умножать и делить два целых числа от 1 до 10. \n Числа могут быть как в арабском формате так и в римском. \n Введите арифметическое действие. \n (для выхода введите exit): \n")
 	writer.Flush()
 	for {
 		line, _ := reader.ReadString('\n')
-		line = strings.ReplaceAll(strings.ReplaceAll(line, " ", ""), "\r\n", "")
-		line = strings.ToUpper(line)
-		if line == "EXIT" {
+		line = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(line, " ", ""), "\r", ""), "\n", "")
+		if line == "exit" {
 			break
 		}
-		isArabic := true
-		calculated := false
-		for _, e := range separator {
-			splitted := strings.Split(line, e)
-			if len(splitted) == 2 {
-				calculated = true
-				if checkIsRoman(splitted[0]) && checkIsRoman(splitted[1]) {
-					isArabic = false
-					a, err = romanToArabic(splitted[0])
-					if err != nil {
-						fmt.Fprintf(writer, "%s \n", err)
-						break
-					}
-					b, err = romanToArabic(splitted[1])
-					if err != nil {
-						fmt.Fprintf(writer, "%s \n", err)
-						break
-					}
-				} else if checkIsNumber(splitted[0]) && checkIsNumber(splitted[1]) {
-					isArabic = true
-					a, err = strconv.Atoi(splitted[0])
-					if err != nil {
-						fmt.Fprintf(writer, "%s \n", err)
-						break
-					}
-					b, err = strconv.Atoi(splitted[1])
-					if err != nil {
-						fmt.Fprintf(writer, "%s \n", err)
-						break
-					}
-				} else {
-					fmt.Fprintf(writer, "%s \n", "Не верный формат вводных данных.")
-					break
-				}
-				if a < 1 || a > 10 || b < 1 || b > 10 {
-					fmt.Fprintf(writer, "%s \n", "Значения выходят за предел 1 - 10.")
-					break
-				}
-				res, _ := calculate(a, b, e)
-				if !isArabic {
-					if res < 0 {
-						fmt.Fprintf(writer, "%s \n", "В римской системе исчисления нет отрицательных значений.")
-						break
-					}
-					fmt.Fprintf(writer, "%s \n", arabicToRoman(res))
-				} else {
-					fmt.Fprintf(writer, "%d \n", res)
-				}
-				break
-			}
-		}
-		if !calculated {
-			fmt.Fprintf(writer, "%s \n", "Не верный формат вводных данных.")
+		result, err := Calculator(line)
+		if err != nil {
+			fmt.Fprintf(writer, "%s \n", err)
+		} else {
+			fmt.Fprintf(writer, "%s \n", result)
 		}
 		writer.Flush()
 	}
